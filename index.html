@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="城市一日游 MVP：将精选地点、时间线和地图路线组合成会讲故事的城市漫游体验。"
+      content="A city day-tour MVP that combines curated highlights, a timeline, and a map into one story-led walking experience."
     />
-    <title>漫游日记 · Amsterdam</title>
+    <title>CityTrace · Amsterdam</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -19,38 +19,38 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <a class="brand" href="#" aria-label="漫游日记首页">
+        <a class="brand" href="#" aria-label="CityTrace home">
           <span class="brand-mark" aria-hidden="true">
             <svg viewBox="0 0 36 36">
               <path d="M18 3.5c-6.2 0-11.2 4.8-11.2 10.8 0 8.1 11.2 18.2 11.2 18.2s11.2-10.1 11.2-18.2C29.2 8.3 24.2 3.5 18 3.5Z" />
               <path class="brand-path" d="M11 17c2.8-5.5 6.2 3.6 9.1-1.4 1.5-2.5 3.1-2.4 5-1.7" />
             </svg>
           </span>
-          <span>漫游日记</span>
+          <span>CityTrace</span>
         </a>
 
-        <nav class="primary-nav" aria-label="主导航">
+        <nav class="primary-nav" aria-label="Main navigation">
           <button class="nav-item active" data-view="journey">
             <span class="nav-icon" aria-hidden="true">⌁</span>
-            今日行程
+            Today's Trip
           </button>
           <button class="nav-item" data-view="discover">
             <span class="nav-icon" aria-hidden="true">◇</span>
-            探索城市
+            Explore
           </button>
           <button class="nav-item" data-view="saved">
             <span class="nav-icon" aria-hidden="true">♡</span>
-            我的收藏
+            Saved Places
           </button>
         </nav>
 
         <div class="sidebar-card">
-          <p class="eyebrow">今日天气</p>
+          <p class="eyebrow">Today's Weather</p>
           <div class="weather-row">
             <span class="weather-icon">☼</span>
             <div>
               <strong>18°C</strong>
-              <span>晴间多云 · 适合步行</span>
+              <span>Partly cloudy · Great for walking</span>
             </div>
           </div>
         </div>
@@ -58,10 +58,10 @@
         <div class="profile">
           <span class="avatar">Y</span>
           <div>
-            <strong>旅行者</strong>
-            <span>历史 · 建筑 · 咖啡</span>
+            <strong>Traveler</strong>
+            <span>History · Architecture · Coffee</span>
           </div>
-          <button aria-label="打开个人菜单">•••</button>
+          <button aria-label="Open profile menu">•••</button>
         </div>
       </aside>
 
@@ -69,16 +69,16 @@
         <header class="topbar">
           <div class="mobile-brand">
             <span class="brand-mark mini" aria-hidden="true">⌖</span>
-            <strong>漫游日记</strong>
+            <strong>CityTrace</strong>
           </div>
-          <button class="city-picker" aria-label="切换城市">
+          <button class="city-picker" aria-label="Change city">
             <span class="flag">🇳🇱</span>
             <span class="city-name">Amsterdam</span>
             <span aria-hidden="true">⌄</span>
           </button>
           <div class="topbar-actions">
-            <button class="icon-button" id="locationButton" aria-label="定位到当前位置">⌖</button>
-            <button class="icon-button" id="notificationButton" aria-label="查看通知">
+            <button class="icon-button" id="locationButton" aria-label="Find my location">⌖</button>
+            <button class="icon-button" id="notificationButton" aria-label="View notifications">
               ♢
               <span class="notification-dot"></span>
             </button>
@@ -87,37 +87,37 @@
 
         <section class="hero">
           <div>
-            <p class="date-label">6月6日 · 星期六</p>
-            <h1>早上好，准备出发了吗？</h1>
-            <p>今天我们沿着运河，读一读阿姆斯特丹的黄金时代。</p>
+            <p class="date-label">June 6 · Saturday</p>
+            <h1>Good morning. Ready to explore?</h1>
+            <p>Today, follow the canals through Amsterdam's Golden Age.</p>
           </div>
           <div class="progress-card">
             <div class="progress-ring" id="progressRing">
               <span id="progressNumber">1/6</span>
             </div>
             <div>
-              <span>今日进度</span>
-              <strong id="progressText">已完成 1 个地点</strong>
+              <span>Today's Progress</span>
+              <strong id="progressText">1 place completed</strong>
             </div>
           </div>
         </section>
 
-        <section class="stats-row" aria-label="行程概览">
+        <section class="stats-row" aria-label="Trip overview">
           <div class="stat">
             <span class="stat-icon coral">↗</span>
-            <div><strong>5.8 km</strong><span>步行距离</span></div>
+            <div><strong>5.8 km</strong><span>Walking distance</span></div>
           </div>
           <div class="stat">
             <span class="stat-icon blue">◷</span>
-            <div><strong>7 小时</strong><span>预计行程</span></div>
+            <div><strong>7 hours</strong><span>Estimated duration</span></div>
           </div>
           <div class="stat">
             <span class="stat-icon gold">✦</span>
-            <div><strong>6 个</strong><span>精选地点</span></div>
+            <div><strong>6</strong><span>Curated places</span></div>
           </div>
           <div class="stat">
             <span class="stat-icon green">♧</span>
-            <div><strong>轻松</strong><span>路线强度</span></div>
+            <div><strong>Easy</strong><span>Route intensity</span></div>
           </div>
         </section>
 
@@ -126,9 +126,9 @@
             <div class="section-heading">
               <div>
                 <p class="eyebrow">YOUR DAY</p>
-                <h2>今日时间线</h2>
+                <h2>Today's Timeline</h2>
               </div>
-              <button class="text-button" id="adjustButton">调整行程 <span>→</span></button>
+              <button class="text-button" id="adjustButton">Adjust trip <span>→</span></button>
             </div>
             <div class="timeline" id="timeline"></div>
           </section>
@@ -137,15 +137,15 @@
             <div class="map-toolbar">
               <div>
                 <p class="eyebrow">LIVE ROUTE</p>
-                <h2>行程地图</h2>
+                <h2>Trip Map</h2>
               </div>
               <div class="map-controls">
-                <button id="zoomInButton" aria-label="放大地图">+</button>
-                <button id="zoomOutButton" aria-label="缩小地图">−</button>
+                <button id="zoomInButton" aria-label="Zoom in">+</button>
+                <button id="zoomOutButton" aria-label="Zoom out">−</button>
               </div>
             </div>
             <div class="map" id="map">
-              <svg class="map-art" viewBox="0 0 660 520" role="img" aria-label="阿姆斯特丹一日游路线地图">
+              <svg class="map-art" viewBox="0 0 660 520" role="img" aria-label="Amsterdam day-tour route map">
                 <rect width="660" height="520" fill="#e9e4d8" />
                 <g class="city-blocks">
                   <path d="M0 0h190l-15 80L85 96 0 76Z" />
@@ -177,14 +177,14 @@
                 />
               </svg>
               <div class="map-pins" id="mapPins"></div>
-              <div class="current-location" id="currentLocation" aria-label="当前位置">
+              <div class="current-location" id="currentLocation" aria-label="Current location">
                 <span></span>
               </div>
               <div class="map-legend">
-                <span><i class="legend-dot active"></i> 下一站</span>
-                <span><i class="legend-dot done"></i> 已完成</span>
+                <span><i class="legend-dot active"></i> Next stop</span>
+                <span><i class="legend-dot done"></i> Completed</span>
               </div>
-              <button class="recenter-button" id="recenterButton" aria-label="回到路线中心">⌖</button>
+              <button class="recenter-button" id="recenterButton" aria-label="Recenter route">⌖</button>
             </div>
           </section>
         </div>
@@ -192,9 +192,9 @@
     </div>
 
     <div class="detail-sheet" id="detailSheet" aria-hidden="true">
-      <button class="sheet-backdrop" id="closeSheetBackdrop" aria-label="关闭地点详情"></button>
+      <button class="sheet-backdrop" id="closeSheetBackdrop" aria-label="Close place details"></button>
       <article class="sheet-content">
-        <button class="sheet-close" id="closeSheetButton" aria-label="关闭地点详情">×</button>
+        <button class="sheet-close" id="closeSheetButton" aria-label="Close place details">×</button>
         <div class="sheet-visual" id="sheetVisual">
           <span class="sheet-category" id="sheetCategory"></span>
           <span class="sheet-number" id="sheetNumber"></span>
@@ -205,12 +205,12 @@
           <p class="sheet-subtitle" id="sheetSubtitle"></p>
           <div class="fact-grid" id="sheetFacts"></div>
           <div class="story-block">
-            <h3>为什么值得看</h3>
+            <h3>Why it matters</h3>
             <p id="sheetStory"></p>
           </div>
           <div class="sheet-actions">
-            <button class="secondary-button" id="saveButton">♡ 收藏地点</button>
-            <button class="primary-button" id="arriveButton">模拟到达这里</button>
+            <button class="secondary-button" id="saveButton">♡ Save place</button>
+            <button class="primary-button" id="arriveButton">Simulate arrival</button>
           </div>
         </div>
       </article>
