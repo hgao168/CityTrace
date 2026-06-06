@@ -1,0 +1,22 @@
+# Local browser profiles and temporary work
+work/
+
+# Generated previews and deliverables
+outputs/
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
