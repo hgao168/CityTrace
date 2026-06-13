@@ -70,6 +70,17 @@ const tripTemplate: Trip = {
   })),
 };
 
-export const trips = new Map<string, Trip>([[tripTemplate.id, tripTemplate]]);
+export const cloneTrip = (trip: Trip): Trip => ({
+  id: trip.id,
+  cityId: trip.cityId,
+  title: trip.title,
+  stops: trip.stops.map((stop) => ({ ...stop })),
+});
+
+export const tripTemplates = new Map<string, Trip>([[tripTemplate.id, tripTemplate]]);
+
+export const trips = new Map<string, Trip>(
+  Array.from(tripTemplates.entries(), ([id, trip]) => [id, cloneTrip(trip)]),
+);
 
 export const userSavedPlaceIds = new Map<string, Set<string>>();
