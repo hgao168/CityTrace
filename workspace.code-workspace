@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "\\\\wsl.localhost\\Ubuntu\\home\\henry\\workspace"
+		},
+		{
+			"path": "\\\\wsl.localhost\\Ubuntu\\home\\henry\\.hermes"
+		}
+	],
+	"settings": {
+		"chat.tools.terminal.autoApprove": {
+			"git remote": true,
+			"git fetch": true,
+			"git merge-base": true
+		}
+	}
+}

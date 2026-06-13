@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "citytrace-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-13",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  // Configure routes after adding zone permissions in your Cloudflare account.
+  // Example production route:
+  // "routes": [{ "pattern": "citytrace.movenova.ai/v1/*", "zone_name": "movenova.ai" }]
+  "vars": {
+    "CITYTRACE_API_BASE": "https://citytrace.movenova.ai"
+  }
+}

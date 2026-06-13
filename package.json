@@ -2,12 +2,16 @@
   "name": "citytrace",
   "private": true,
   "workspaces": [
-    "web"
+    "web",
+    "backend"
   ],
   "scripts": {
     "dev": "npm run dev --workspace web",
     "build": "npm run build --workspace web",
     "start": "npm run start --workspace web",
-    "typecheck": "npm run typecheck --workspace web"
+    "typecheck": "npm run typecheck --workspace web",
+    "backend:dev": "npm run dev --workspace backend",
+    "backend:deploy": "npm run deploy --workspace backend",
+    "backend:typecheck": "npm run typecheck --workspace backend"
   }
 }

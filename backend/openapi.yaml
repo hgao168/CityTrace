@@ -1,0 +1,237 @@
+openapi: 3.0.3
+info:
+  title: CityTrace API
+  version: 0.1.0
+  description: Shared API contract for CityTrace web and native clients.
+servers:
+  - url: https://citytrace.movenova.ai
+paths:
+  /v1/cities:
+    get:
+      summary: List available cities
+      operationId: listCities
+      responses:
+        '200':
+          description: City list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+  /v1/cities/{cityId}/places:
+    get:
+      summary: List places for a city
+      operationId: listPlacesByCity
+      parameters:
+        - name: cityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Place list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Place'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/trips/{tripId}:
+    get:
+      summary: Read a trip and ordered stops
+      operationId: getTrip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trip
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/trips/{tripId}/progress:
+    patch:
+      summary: Update trip progress
+      operationId: updateTripProgress
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripProgressUpdate'
+      responses:
+        '200':
+          description: Empty response object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/users/{userId}/saved-places:
+    get:
+      summary: Read user saved places
+      operationId: getSavedPlaces
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Saved places
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Place'
+  /v1/users/{userId}/saved-places/{placeId}:
+    put:
+      summary: Save a place for a user
+      operationId: savePlace
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: placeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Empty response object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Remove a saved place for a user
+      operationId: removeSavedPlace
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: placeId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Empty response object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmptyResponse'
+components:
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    City:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        country_code:
+          type: string
+    Place:
+      type: object
+      required: [id, city_id, title]
+      properties:
+        id:
+          type: string
+        city_id:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+    TripStop:
+      type: object
+      required: [place_id, order]
+      properties:
+        place_id:
+          type: string
+        order:
+          type: integer
+        status:
+          type: string
+          enum: [done, active, upcoming]
+    Trip:
+      type: object
+      required: [id, stops]
+      properties:
+        id:
+          type: string
+        city_id:
+          type: string
+        title:
+          type: string
+        stops:
+          type: array
+          items:
+            $ref: '#/components/schemas/TripStop'
+    TripProgressUpdate:
+      type: object
+      required: [completed_stop_ids, completed_trip]
+      properties:
+        arrived_stop_id:
+          type: string
+        completed_stop_ids:
+          type: array
+          items:
+            type: string
+        completed_trip:
+          type: boolean
+    EmptyResponse:
+      type: object
+      additionalProperties: false
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
