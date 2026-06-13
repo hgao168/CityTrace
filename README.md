@@ -1,31 +1,38 @@
-# CityTrace MVP
+# CityTrace
 
-A zero-dependency city day-tour web MVP that demonstrates these core experiences:
+CityTrace is a cross-platform, story-led city exploration product. This
+repository contains the website, native client workspaces, WeChat client, and
+shared backend boundary.
 
-- Highlights: curated historical places and detailed stories
-- Timeline: route times, walking distances, and completion status
-- Map: two-way interaction between places, route, location, and timeline
-- Location trigger: an arrival simulation for nearby-place experiences
-- Progress: automatic progress updates and next-stop recommendations
+## Repository
 
-## Run
+| Folder | Purpose |
+| --- | --- |
+| `web` | Next.js website and browser MVP |
+| `ios` | Native SwiftUI client |
+| `android` | Native Jetpack Compose client |
+| `wechat` | WeChat Mini Program |
+| `backend` | Shared API and geospatial services |
+| `docs` | Architecture and API contracts |
 
-Open `index.html` directly in a browser, or start any static file server in this directory:
+## Web
+
+The existing highlight, timeline, map, arrival, progress, and saved-place MVP
+has been migrated into the Next.js App Router under `web`.
 
 ```powershell
-python -m http.server 8000
+npm install
+npm run dev
 ```
 
-Then visit `http://localhost:8000`.
+Open `http://localhost:3000`.
 
-## MVP Scope
+Production website: [citytrace.movenova.ai](https://citytrace.movenova.ai)
 
-The current map is an interactive illustration that requires no API key. Place data is stored in `app.js`. A production version can replace it with MapLibre or Mapbox and move places, routes, and user trips to a backend API.
+For deployment, configure the hosting project root as `web` and attach the
+custom domain `citytrace.movenova.ai`.
 
-Recommended next steps:
+## Architecture
 
-1. Add MapLibre and real GeoJSON routes.
-2. Add GPS, geofencing, and background location permissions.
-3. Use PostgreSQL and PostGIS for place storage and distance queries.
-4. Add a content management system and multilingual audio guides.
-5. Package the web MVP as a React Native or Expo mobile app.
+See [docs/architecture.md](docs/architecture.md) for platform boundaries and
+[docs/api-contract.md](docs/api-contract.md) for the initial shared API shape.

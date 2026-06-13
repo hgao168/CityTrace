@@ -20,7 +20,7 @@ body {
   margin: 0;
   color: var(--ink);
   background: var(--paper);
-  font-family: "DM Sans", "Noto Sans SC", sans-serif;
+  font-family: var(--font-dm-sans), "DM Sans", sans-serif;
 }
 
 button,
