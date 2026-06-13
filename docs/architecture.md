@@ -11,18 +11,18 @@ backend/   Shared API and geospatial services
 docs/      Cross-platform architecture and contracts
 ```
 
-## Web Migration
+## Website Foundation
 
-The original static MVP now runs inside the Next.js App Router. Its existing
-markup, styles, and interactions are preserved as a migration boundary:
+The original static MVP now runs as typed React components inside the Next.js
+App Router:
 
-- `web/src/content/mvp.html` contains the existing MVP markup.
-- `web/src/app/globals.css` contains the existing visual system.
-- `web/public/mvp.js` contains current browser interactions and local state.
-- `web/src/app/page.tsx` renders the MVP through Next.js.
+- `web/src/features/journey/data.ts` contains the Amsterdam trip fixture.
+- `web/src/features/journey/types.ts` defines client domain contracts.
+- `web/src/features/journey/use-journey.ts` owns journey state and actions.
+- Feature components own the sidebar, timeline, map, and detail presentation.
+- `web/src/app/globals.css` retains the accepted visual system.
 
-This keeps the deployed product stable while individual areas are converted to
-React components in later changes.
+See `docs/phase-1-web.md` for delivered scope and Phase 1 exit criteria.
 
 ## Deployment
 

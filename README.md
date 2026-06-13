@@ -42,3 +42,5 @@ The custom domain is `citytrace.movenova.ai`.
 
 See [docs/architecture.md](docs/architecture.md) for platform boundaries and
 [docs/api-contract.md](docs/api-contract.md) for the initial shared API shape.
+The website-first Phase 1 scope is documented in
+[docs/phase-1-web.md](docs/phase-1-web.md).

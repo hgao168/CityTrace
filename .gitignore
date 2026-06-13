@@ -27,3 +27,9 @@ node_modules/
 out/
 *.tsbuildinfo
 .vercel/
+
+# Swift and iOS build artifacts
+ios/.build/
+
+# Cloudflare local state
+backend/.wrangler/
