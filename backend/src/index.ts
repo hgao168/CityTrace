@@ -1,25 +1,28 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { cities, places, trips, userSavedPlaceIds } from "./data";
 import type { EmptyResponse, Trip, TripProgressUpdate } from "./types";
 
 const app = new Hono();
 
+app.use(
+  "/*",
+  cors({
+    origin: ["https://citytrace.movenova.ai", "http://localhost:3000"],
+    allowMethods: ["GET", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
+  }),
+);
+
 app.get("/", (c) =>
   c.json({
     service: "citytrace-backend",
     status: "ok",
-    docs: "/openapi.yaml",
+    version: "0.1.0",
+    spec: "backend/openapi.yaml",
   }),
 );
-
-app.get("/openapi.yaml", async (c) => {
-  const openApiUrl = new URL("./openapi.yaml", c.req.url);
-  const response = await fetch(openApiUrl);
-  const spec = await response.text();
-  return c.text(spec, 200, {
-    "content-type": "application/yaml; charset=utf-8",
-  });
-});
 
 app.get("/v1/cities", (c) => c.json(cities));
 
