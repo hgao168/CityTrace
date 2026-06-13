@@ -107,9 +107,62 @@ const timeline = document.querySelector("#timeline");
 const mapPins = document.querySelector("#mapPins");
 const detailSheet = document.querySelector("#detailSheet");
 const toast = document.querySelector("#toast");
+const STORAGE_KEY = "citytrace:journey:v1";
 let selectedPlaceId = "dam";
+let savedPlaceIds = new Set();
 let mapScale = 1;
 let toastTimer;
+
+function persistJourney() {
+  const state = {
+    selectedPlaceId,
+    savedPlaceIds: [...savedPlaceIds],
+    statuses: Object.fromEntries(places.map((place) => [place.id, place.status])),
+  };
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // The trip remains usable when storage is unavailable or full.
+  }
+}
+
+function restoreJourney() {
+  try {
+    const state = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!state || typeof state !== "object") return;
+
+    const validPlaceIds = new Set(places.map((place) => place.id));
+    savedPlaceIds = new Set(
+      Array.isArray(state.savedPlaceIds)
+        ? state.savedPlaceIds.filter((placeId) => validPlaceIds.has(placeId))
+        : [],
+    );
+
+    if (validPlaceIds.has(state.selectedPlaceId)) {
+      selectedPlaceId = state.selectedPlaceId;
+    }
+
+    if (state.statuses && typeof state.statuses === "object") {
+      places.forEach((place) => {
+        const status = state.statuses[place.id];
+        if (["done", "active", "upcoming"].includes(status)) {
+          place.status = status;
+        }
+      });
+    }
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+}
+
+function updateCurrentLocation() {
+  const completedPlaces = places.filter((place) => place.status === "done");
+  const currentPlace = completedPlaces.at(-1) ?? places[0];
+  const currentLocation = document.querySelector("#currentLocation");
+  currentLocation.style.left = `${currentPlace.position.left}%`;
+  currentLocation.style.top = `${currentPlace.position.top}%`;
+}
 
 function renderTimeline() {
   timeline.innerHTML = places
@@ -178,6 +231,8 @@ function selectPlace(placeId, openDetails = false) {
   if (openDetails) {
     openPlaceDetails(placeId);
   }
+
+  persistJourney();
 }
 
 function openPlaceDetails(placeId) {
@@ -199,6 +254,10 @@ function openPlaceDetails(placeId) {
   document.querySelector("#arriveButton").textContent =
     place.status === "done" ? "Place completed" : "Simulate arrival";
   document.querySelector("#arriveButton").disabled = place.status === "done";
+  const isSaved = savedPlaceIds.has(place.id);
+  const saveButton = document.querySelector("#saveButton");
+  saveButton.classList.toggle("saved", isSaved);
+  saveButton.textContent = isSaved ? "♥ Saved" : "♡ Save place";
 
   detailSheet.classList.add("open");
   detailSheet.setAttribute("aria-hidden", "false");
@@ -221,13 +280,11 @@ function markArrived() {
 
   const arrivedPlace = places[selectedIndex];
   const nextPlace = places[selectedIndex + 1];
-  const currentLocation = document.querySelector("#currentLocation");
-  currentLocation.style.left = `${arrivedPlace.position.left}%`;
-  currentLocation.style.top = `${arrivedPlace.position.top}%`;
 
   renderTimeline();
   renderMapPins();
   updateProgress();
+  updateCurrentLocation();
   closePlaceDetails();
   showToast(
     nextPlace
@@ -238,6 +295,8 @@ function markArrived() {
   if (nextPlace) {
     selectPlace(nextPlace.id);
   }
+
+  persistJourney();
 }
 
 function updateProgress() {
@@ -268,8 +327,13 @@ document.querySelector("#closeSheetBackdrop").addEventListener("click", closePla
 document.querySelector("#arriveButton").addEventListener("click", markArrived);
 
 document.querySelector("#saveButton").addEventListener("click", (event) => {
-  const isSaved = event.currentTarget.classList.toggle("saved");
+  const isSaved = !savedPlaceIds.has(selectedPlaceId);
+  if (isSaved) savedPlaceIds.add(selectedPlaceId);
+  else savedPlaceIds.delete(selectedPlaceId);
+
+  event.currentTarget.classList.toggle("saved", isSaved);
   event.currentTarget.textContent = isSaved ? "♥ Saved" : "♡ Save place";
+  persistJourney();
   showToast(isSaved ? "Place added to your saved list" : "Place removed from your saved list");
 });
 
@@ -304,6 +368,8 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closePlaceDetails();
 });
 
+restoreJourney();
 renderTimeline();
 renderMapPins();
 updateProgress();
+updateCurrentLocation();
