@@ -1,0 +1,161 @@
+<view class="page-shell">
+  <view class="topbar">
+    <view class="brand">
+      <view class="brand-mark">CT</view>
+      <text>CityTrace</text>
+    </view>
+    <view class="city-chip">
+      <text class="flag">NL</text>
+      <text>Amsterdam</text>
+    </view>
+    <view class="top-actions">
+      <button class="icon-button" bindtap="locateUser" aria-label="Find my location">LOC</button>
+      <button class="icon-button notification" bindtap="showNotification" aria-label="Notifications">
+        MSG
+        <view wx:if="{{hasNotification}}" class="notification-dot"></view>
+      </button>
+    </view>
+  </view>
+
+  <view class="hero">
+    <text class="date-label">JUNE 6 / SATURDAY</text>
+    <text class="hero-title">Good morning. Ready to explore?</text>
+    <text class="hero-copy">Today, follow the canals through Amsterdam's Golden Age.</text>
+    <view class="progress-card">
+      <view class="progress-ring">
+        <text class="progress-number">{{doneCount}}/{{places.length}}</text>
+        <view class="progress-fill" style="height: {{progressPercent}}%"></view>
+      </view>
+      <view>
+        <text class="progress-label">TODAY'S PROGRESS</text>
+        <text class="progress-value">{{doneCount}} places completed</text>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view class="stats-scroll" scroll-x enable-flex>
+    <view class="stat-card">
+      <text class="stat-icon coral">KM</text>
+      <view><text class="stat-value">5.8 km</text><text class="stat-label">Walking distance</text></view>
+    </view>
+    <view class="stat-card">
+      <text class="stat-icon blue">HR</text>
+      <view><text class="stat-value">7 hours</text><text class="stat-label">Estimated duration</text></view>
+    </view>
+    <view class="stat-card">
+      <text class="stat-icon gold">06</text>
+      <view><text class="stat-value">{{places.length}}</text><text class="stat-label">Curated places</text></view>
+    </view>
+    <view class="stat-card">
+      <text class="stat-icon green">EZ</text>
+      <view><text class="stat-value">Easy</text><text class="stat-label">Route intensity</text></view>
+    </view>
+  </scroll-view>
+
+  <view class="map-section">
+    <view class="section-heading">
+      <view><text class="eyebrow">LIVE ROUTE</text><text class="section-title">Trip Map</text></view>
+      <view class="map-controls">
+        <button bindtap="zoomIn" aria-label="Zoom in">+</button>
+        <button bindtap="zoomOut" aria-label="Zoom out">-</button>
+      </view>
+    </view>
+    <map
+      id="journey-map"
+      class="journey-map"
+      latitude="{{center.latitude}}"
+      longitude="{{center.longitude}}"
+      scale="{{mapScale}}"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      show-location
+      enable-zoom
+      enable-scroll
+      bindmarkertap="selectMarker"
+    ></map>
+    <button class="recenter-button" bindtap="recenterMap">Recenter route</button>
+  </view>
+
+  <view class="timeline-section">
+    <view class="section-heading">
+      <view><text class="eyebrow">YOUR DAY</text><text class="section-title">Today's Timeline</text></view>
+      <button class="adjust-button" bindtap="adjustTrip">Adjust trip</button>
+    </view>
+    <view class="timeline">
+      <view
+        wx:for="{{places}}"
+        wx:key="id"
+        id="stop-{{item.id}}"
+        class="timeline-item {{item.status}} {{item.selected ? 'selected' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="selectTimelinePlace"
+      >
+        <text class="timeline-time">{{item.time}}</text>
+        <view class="timeline-track">
+          <view class="timeline-node">{{item.status === 'done' ? 'OK' : item.index}}</view>
+          <view wx:if="{{index < places.length - 1}}" class="timeline-line"></view>
+        </view>
+        <view class="place-card">
+          <view class="place-image {{item.imageTone}}">
+            <text>{{item.number}}</text>
+          </view>
+          <view class="place-copy">
+            <text class="place-title">{{item.title}}</text>
+            <text class="place-subtitle">{{item.subtitle}}</text>
+            <view class="place-meta">
+              <text>{{item.duration}}</text>
+              <text>{{item.walk}}</text>
+            </view>
+          </view>
+          <text class="place-arrow">&gt;</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="tabbar">
+    <button class="{{activeTab === 'journey' ? 'active' : ''}}" data-tab="journey" bindtap="selectTab">Journey</button>
+    <button class="{{activeTab === 'explore' ? 'active' : ''}}" data-tab="explore" bindtap="selectTab">Explore</button>
+    <button class="{{activeTab === 'saved' ? 'active' : ''}}" data-tab="saved" bindtap="selectTab">Saved</button>
+  </view>
+
+  <view wx:if="{{detailPlace}}" class="detail-overlay" bindtap="closeDetails">
+    <view class="detail-sheet" catchtap="blockTap">
+      <view class="sheet-handle"></view>
+      <button class="sheet-close" bindtap="closeDetails">Close</button>
+      <view class="sheet-visual {{detailPlace.imageTone}}">
+        <text class="category-chip">{{detailPlace.category}}</text>
+        <text class="sheet-number">{{detailPlace.number}}</text>
+      </view>
+      <scroll-view class="sheet-scroll" scroll-y>
+        <text class="eyebrow">{{detailPlace.time}} / TODAY</text>
+        <text class="sheet-title">{{detailPlace.title}}</text>
+        <text class="sheet-subtitle">{{detailPlace.subtitle}}</text>
+        <view class="fact-grid">
+          <view><text>Suggested time</text><text class="fact-value">{{detailPlace.duration}}</text></view>
+          <view><text>From last stop</text><text class="fact-value">{{detailPlace.walk}}</text></view>
+          <view><text>Total distance</text><text class="fact-value">{{detailPlace.distance}}</text></view>
+        </view>
+        <view class="story-block">
+          <text class="story-title">Why it matters</text>
+          <text class="story-copy">{{detailPlace.story}}</text>
+        </view>
+        <view class="sheet-actions">
+          <button class="save-button {{detailPlace.saved ? 'saved' : ''}}" bindtap="toggleSaved">
+            {{detailPlace.saved ? 'Saved' : 'Save place'}}
+          </button>
+          <button
+            class="arrival-button"
+            bindtap="markArrived"
+            disabled="{{detailPlace.status === 'done'}}"
+          >
+            {{detailPlace.status === 'done' ? 'Place completed' : 'Mark arrival'}}
+          </button>
+        </view>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view wx:if="{{toast}}" class="toast">{{toast}}</view>
+  <view wx:if="{{loading}}" class="loading">Loading your journey...</view>
+</view>

@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "pages/journey/journey"
+  ],
+  "window": {
+    "navigationBarTitleText": "CityTrace",
+    "navigationBarBackgroundColor": "#f6f3eb",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f6f3eb",
+    "backgroundTextStyle": "dark"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "Your location helps CityTrace show nearby stops and confirm arrivals."
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents"
+}

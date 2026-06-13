@@ -16,6 +16,8 @@
     "backend:security": "npm run test:security --workspace backend",
     "backend:test": "npm run test --workspace backend",
     "backend:deploy": "npm run deploy --workspace backend",
-    "backend:typecheck": "npm run typecheck --workspace backend"
+    "backend:typecheck": "npm run typecheck --workspace backend",
+    "wechat:check": "npm run check --prefix wechat",
+    "wechat:test": "npm run test --prefix wechat"
   }
 }

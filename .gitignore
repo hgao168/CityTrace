@@ -33,3 +33,6 @@ ios/.build/
 
 # Cloudflare local state
 backend/.wrangler/
+
+# WeChat Developer Tools local project identity
+wechat/project.private.config.json
