@@ -1,28 +1,39 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "citytrace-backend",
-  "account_id": "96f8ff86f09bb6493b6b467ef1d6b103",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-06-13",
-  "workers_dev": false,
-  "routes": [
-    { "pattern": "citytrace.movenova.ai/v1/*", "zone_name": "movenova.ai" }
-  ],
-  "observability": {
-    "enabled": true
-  },
-  // Optional D1 setup for durable progress and saved places:
-  // 1) Create DB: `npx wrangler d1 create citytrace-backend-db`
-  // 2) Paste resulting database_id below.
-  // 3) Apply schema: `npx wrangler d1 execute citytrace-backend-db --file=./sql/001_init.sql`
-  // "d1_databases": [
-  //   {
-  //     "binding": "DB",
-  //     "database_name": "citytrace-backend-db",
-  //     "database_id": "<paste-d1-database-id>"
-  //   }
-  // ],
-  "vars": {
-    "CITYTRACE_API_BASE": "https://citytrace.movenova.ai"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "citytrace-backend",
+	"account_id": "96f8ff86f09bb6493b6b467ef1d6b103",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-06-13",
+	"workers_dev": false,
+	"routes": [
+		{
+			"pattern": "citytrace.movenova.ai/v1/*",
+			"zone_name": "movenova.ai"
+		}
+	],
+	"observability": {
+		"enabled": true
+	},
+	// Optional D1 setup for durable progress and saved places:
+	// 1) Create DB: `npx wrangler d1 create citytrace-backend-db`
+	// 2) Paste resulting database_id below.
+	// 3) Apply schema: `npx wrangler d1 execute citytrace-backend-db --file=./sql/001_init.sql`
+	// "d1_databases": [
+	//   {
+	//     "binding": "DB",
+	//     "database_name": "citytrace-backend-db",
+	//     "database_id": "<paste-d1-database-id>"
+	//   }
+	// ],
+	"vars": {
+		"CITYTRACE_API_BASE": "https://citytrace.movenova.ai"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "citytrace-backend-db",
+			"database_id": "cf819d48-9feb-4eff-b1ee-0fe8e843e3d2",
+			"remote": true
+		}
+	]
 }
