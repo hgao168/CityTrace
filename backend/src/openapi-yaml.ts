@@ -1,4 +1,4 @@
-openapi: 3.0.3
+export const OPENAPI_YAML = `openapi: 3.0.3
 info:
   title: CityTrace API
   version: 0.1.0
@@ -323,3 +323,4 @@ components:
       properties:
         error:
           type: string
+`;

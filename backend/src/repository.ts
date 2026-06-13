@@ -7,6 +7,7 @@ const validStatuses = new Set<StopStatus>(["done", "active", "upcoming"]);
 
 export type AppBindings = {
   CITYTRACE_API_BASE: string;
+  CITYTRACE_TEST_MODE?: string;
   DB?: D1Database;
 };
 
@@ -145,8 +146,8 @@ class D1JourneyRepository implements JourneyRepository {
 const inMemoryRepository = new InMemoryJourneyRepository();
 let d1Repository: D1JourneyRepository | null = null;
 
-export const getJourneyRepository = (env: AppBindings): JourneyRepository => {
-  if (env.DB) {
+export const getJourneyRepository = (env?: Partial<AppBindings>): JourneyRepository => {
+  if (env?.DB) {
     d1Repository ??= new D1JourneyRepository(env.DB);
     return d1Repository;
   }

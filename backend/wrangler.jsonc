@@ -9,6 +9,14 @@
 		{
 			"pattern": "citytrace.movenova.ai/v1/*",
 			"zone_name": "movenova.ai"
+		},
+		{
+			"pattern": "citytrace.movenova.ai/openapi.yaml",
+			"zone_name": "movenova.ai"
+		},
+		{
+			"pattern": "citytrace.movenova.ai/",
+			"zone_name": "movenova.ai"
 		}
 	],
 	"observability": {

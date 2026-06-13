@@ -37,4 +37,6 @@ Phase 5  WeChat Mini Program     wechat/     Mini Program on shared API
 - The published OpenAPI document matches implemented `/v1` behavior.
 - Each client passes the same journey acceptance checks: selection, progress,
   arrival, saved places, and reload persistence.
+- Security testing is executed for each phase's shipped surface, and any
+  critical findings are resolved before sign-off.
 - No client regresses the desktop or mobile reference experience.

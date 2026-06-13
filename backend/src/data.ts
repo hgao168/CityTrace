@@ -84,3 +84,12 @@ export const trips = new Map<string, Trip>(
 );
 
 export const userSavedPlaceIds = new Map<string, Set<string>>();
+
+export const resetJourneyData = (): void => {
+  trips.clear();
+  for (const [id, trip] of tripTemplates.entries()) {
+    trips.set(id, cloneTrip(trip));
+  }
+
+  userSavedPlaceIds.clear();
+};

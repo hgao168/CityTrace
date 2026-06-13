@@ -37,6 +37,8 @@ the shared API contract and domain model.
 - Arrival and progress updates post to `/v1` and reconcile on reentry.
 - Saved places round-trip through the API.
 - The Mini Program runs against local fixtures during development.
+- Security testing covers the Mini Program build and its backend integration,
+  and critical findings are fixed before the phase closes.
 - Submission passes WeChat review for permissions and request domains.
 
 ## Completion

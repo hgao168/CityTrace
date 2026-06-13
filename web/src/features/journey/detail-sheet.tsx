@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { places } from "./data";
 import type { JourneyState, Place } from "./types";
 
 type DetailSheetProps = {
@@ -8,6 +7,7 @@ type DetailSheetProps = {
   onArrive: () => void;
   onClose: () => void;
   onToggleSaved: () => void;
+  places: Place[];
 };
 
 export function DetailSheet({
@@ -16,6 +16,7 @@ export function DetailSheet({
   onArrive,
   onClose,
   onToggleSaved,
+  places,
 }: DetailSheetProps) {
   const placeIndex = place
     ? places.findIndex((item) => item.id === place.id)
@@ -34,7 +35,11 @@ export function DetailSheet({
         aria-label="Close place details"
       />
       {place ? (
-        <article className="sheet-content" aria-label={place.title}>
+        <article
+          className="sheet-content"
+          aria-label={place.title}
+          data-testid="detail-sheet"
+        >
           <button
             className="sheet-close"
             onClick={onClose}
@@ -76,12 +81,14 @@ export function DetailSheet({
             <div className="sheet-actions">
               <button
                 className={`secondary-button ${isSaved ? "saved" : ""}`}
+                data-testid="save-place-button"
                 onClick={onToggleSaved}
               >
                 {isSaved ? "♥ Saved" : "♡ Save place"}
               </button>
               <button
                 className="primary-button"
+                data-testid="arrive-button"
                 disabled={isDone}
                 onClick={onArrive}
               >

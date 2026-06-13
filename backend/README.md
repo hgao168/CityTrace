@@ -16,7 +16,8 @@ Initial service boundaries:
 Recommended foundation:
 
 - TypeScript service
-- PostgreSQL with PostGIS
+- Cloudflare Workers with D1-backed persistence
+- Worker-computed proximity queries from stored coordinates
 - REST API under `/v1`
 - OpenAPI as the client contract
 
@@ -44,5 +45,21 @@ Use a route on `citytrace.movenova.ai` for `/v1/*` traffic.
 ### API Contract
 
 OpenAPI output is maintained in `backend/openapi.yaml`.
+
+### Security Validation
+
+Run the focused backend security checks from the workspace root:
+
+```powershell
+npm run backend:security
+```
+
+The current security validation covers:
+
+- CORS allowlist behavior for production and local web origins.
+- Rejection of disallowed origins from CORS response headers.
+- Rejection of malformed JSON writes.
+- Rejection of invalid trip stop identifiers in progress updates.
+- Rejection of invalid nearby-query coordinates and radius values.
 
 The current MVP remains local-first until this service is implemented.

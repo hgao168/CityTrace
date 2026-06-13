@@ -10,7 +10,11 @@
     "build": "npm run build --workspace web",
     "start": "npm run start --workspace web",
     "typecheck": "npm run typecheck --workspace web",
+    "web:security": "npm run test:security --workspace web",
+    "web:test:e2e": "npm run test:e2e --workspace web",
     "backend:dev": "npm run dev --workspace backend",
+    "backend:security": "npm run test:security --workspace backend",
+    "backend:test": "npm run test --workspace backend",
     "backend:deploy": "npm run deploy --workspace backend",
     "backend:typecheck": "npm run typecheck --workspace backend"
   }

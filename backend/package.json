@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:security": "vitest run src/security.test.ts"
   },
   "dependencies": {
     "hono": "^4.9.0"
@@ -14,6 +16,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260610.0",
     "typescript": "^5.8.3",
+    "vitest": "^3.2.4",
     "wrangler": "^4.20.0"
   }
 }

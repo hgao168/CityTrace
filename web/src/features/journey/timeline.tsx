@@ -1,12 +1,12 @@
 import type { CSSProperties, RefObject } from "react";
-import { places } from "./data";
-import type { JourneyState } from "./types";
+import type { JourneyState, Place } from "./types";
 
 type TimelineProps = {
   journey: JourneyState;
   itemRefs: RefObject<Record<string, HTMLElement | null>>;
   onAdjust: () => void;
   onSelectPlace: (placeId: string) => void;
+  places: Place[];
 };
 
 export function Timeline({
@@ -14,6 +14,7 @@ export function Timeline({
   itemRefs,
   onAdjust,
   onSelectPlace,
+  places,
 }: TimelineProps) {
   return (
     <section className="journey-panel">
@@ -35,6 +36,7 @@ export function Timeline({
                 journey.selectedPlaceId === place.id ? "active" : ""
               }`}
               key={place.id}
+              data-testid={`timeline-item-${place.id}`}
               ref={(node) => {
                 itemRefs.current[place.id] = node;
               }}
@@ -44,6 +46,7 @@ export function Timeline({
               <button
                 className="place-card"
                 aria-label={`View details for ${place.title}`}
+                data-testid={`timeline-open-${place.id}`}
                 onClick={() => onSelectPlace(place.id)}
               >
                 <span

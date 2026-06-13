@@ -1,6 +1,6 @@
 import type { Place } from "./types";
 
-export const places: Place[] = [
+export const fixturePlaces: Place[] = [
   {
     id: "centraal",
     time: "09:00",
@@ -99,6 +99,9 @@ export const places: Place[] = [
   },
 ];
 
-export const initialStatuses = Object.fromEntries(
-  places.map((place) => [place.id, place.initialStatus]),
+export const buildInitialStatuses = (places: Place[]) =>
+  Object.fromEntries(
+    places.map((place) => [place.id, place.initialStatus]),
 );
+
+export const fixtureInitialStatuses = buildInitialStatuses(fixturePlaces);

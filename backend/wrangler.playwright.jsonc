@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "citytrace-backend-playwright",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-13",
+  "workers_dev": true,
+  "vars": {
+    "CITYTRACE_API_BASE": "http://127.0.0.1:8787",
+    "CITYTRACE_TEST_MODE": "true"
+  }
+}

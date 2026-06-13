@@ -1,24 +1,31 @@
-import { initialStatuses, places } from "./data";
-import type { JourneyState, PlaceStatus } from "./types";
+import { buildInitialStatuses } from "./data";
+import type { JourneyState, Place, PlaceStatus } from "./types";
 
 const STORAGE_KEY = "citytrace:journey:v1";
 const validStatuses = new Set<PlaceStatus>(["done", "active", "upcoming"]);
 
-export const initialJourneyState: JourneyState = {
-  selectedPlaceId: "dam",
-  savedPlaceIds: [],
-  statuses: initialStatuses,
-};
+export function createInitialJourneyState(places: Place[]): JourneyState {
+  const statuses = buildInitialStatuses(places);
+  const activePlace = places.find((place) => place.initialStatus === "active");
 
-export function loadJourneyState(): JourneyState {
+  return {
+    selectedPlaceId: activePlace?.id ?? places[0]?.id ?? "",
+    savedPlaceIds: [],
+    statuses,
+  };
+}
+
+export function loadJourneyState(places: Place[], seed: JourneyState): JourneyState {
+  if (places.length === 0) return seed;
+
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null") as
       | Partial<JourneyState>
       | null;
-    if (!stored) return initialJourneyState;
+    if (!stored) return seed;
 
     const placeIds = new Set(places.map((place) => place.id));
-    const statuses = { ...initialStatuses };
+    const statuses = { ...seed.statuses };
 
     for (const place of places) {
       const status = stored.statuses?.[place.id];
@@ -28,15 +35,15 @@ export function loadJourneyState(): JourneyState {
     return {
       selectedPlaceId: placeIds.has(stored.selectedPlaceId ?? "")
         ? stored.selectedPlaceId!
-        : initialJourneyState.selectedPlaceId,
+        : seed.selectedPlaceId,
       savedPlaceIds: Array.isArray(stored.savedPlaceIds)
         ? stored.savedPlaceIds.filter((placeId) => placeIds.has(placeId))
-        : [],
+        : seed.savedPlaceIds,
       statuses,
     };
   } catch {
     localStorage.removeItem(STORAGE_KEY);
-    return initialJourneyState;
+    return seed;
   }
 }
 

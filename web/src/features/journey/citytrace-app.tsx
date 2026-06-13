@@ -6,7 +6,6 @@ import { DetailSheet } from "./detail-sheet";
 import { MapPanel } from "./map-panel";
 import { Sidebar } from "./sidebar";
 import { Timeline } from "./timeline";
-import { places } from "./data";
 import { useJourney } from "./use-journey";
 
 export function CityTraceApp() {
@@ -18,11 +17,14 @@ export function CityTraceApp() {
     currentPlace,
     detailPlace,
     doneCount,
+    hasRestoredJourney,
     focusMap,
     hasNotification,
+    isRemote,
     journey,
     mapScale,
     markArrived,
+    places,
     recenterMap,
     selectPlace,
     selectView,
@@ -40,7 +42,7 @@ export function CityTraceApp() {
   }, [journey.selectedPlaceId]);
 
   const openPlace = (placeId: string) => selectPlace(placeId, true);
-  const progress = (doneCount / places.length) * 100;
+  const progress = (doneCount / Math.max(1, places.length)) * 100;
 
   return (
     <>
@@ -110,7 +112,12 @@ export function CityTraceApp() {
           <section className="stats-row" aria-label="Trip overview">
             <TripStat icon="↗" tone="coral" value="5.8 km" label="Walking distance" />
             <TripStat icon="◷" tone="blue" value="7 hours" label="Estimated duration" />
-            <TripStat icon="✦" tone="gold" value="6" label="Curated places" />
+            <TripStat
+              icon="✦"
+              tone="gold"
+              value={String(places.length)}
+              label="Curated places"
+            />
             <TripStat icon="♧" tone="green" value="Easy" label="Route intensity" />
           </section>
 
@@ -124,6 +131,7 @@ export function CityTraceApp() {
                 )
               }
               onSelectPlace={openPlace}
+              places={places}
             />
             <MapPanel
               currentPlace={currentPlace}
@@ -132,6 +140,7 @@ export function CityTraceApp() {
               onRecenter={recenterMap}
               onScaleChange={changeMapScale}
               onSelectPlace={openPlace}
+              places={places}
             />
           </div>
         </main>
@@ -143,8 +152,17 @@ export function CityTraceApp() {
         onArrive={markArrived}
         onClose={closeDetails}
         onToggleSaved={toggleSaved}
+        places={places}
       />
-      <div className={`toast ${toast ? "show" : ""}`} role="status" aria-live="polite">
+      <div data-testid="journey-bootstrap-state" hidden>
+        {hasRestoredJourney ? (isRemote ? "remote" : "local") : "loading"}
+      </div>
+      <div
+        className={`toast ${toast ? "show" : ""}`}
+        data-testid="toast"
+        role="status"
+        aria-live="polite"
+      >
         {toast}
       </div>
     </>

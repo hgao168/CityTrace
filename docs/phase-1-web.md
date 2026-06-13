@@ -16,6 +16,9 @@ changing its accepted desktop or mobile experience.
 - Moved Amsterdam trip content into a dedicated data module.
 - Centralized selection, progress, arrival, saves, map zoom, notifications,
   detail presentation, and toast behavior in a journey hook.
+- Routed trip, place, save, and progress sync through a repository interface
+  that reads the shared `/v1` backend when available and falls back to local
+  fixtures when it is not.
 - Preserved versioned local persistence for progress and saved places.
 - Kept Cloudflare Pages static export and the production URL unchanged.
 
@@ -44,12 +47,19 @@ web/src/features/journey/
 - Timeline and map selection remain synchronized.
 - Save and arrival state survive reloads.
 - Keyboard dismissal and notification feedback work.
+- Security testing covers the deployed web surface, and critical findings are
+  fixed before the phase closes.
 - The website no longer depends on `dangerouslySetInnerHTML` or a legacy
   public script.
+
+## Security Validation
+
+- `npm run web:security` verifies backend repository usage, local-storage state
+  sanitization, and the absence of `dangerouslySetInnerHTML` in `web/src`.
 
 ## Next Website Phase
 
 Replace the illustrated map with MapLibre and GeoJSON while retaining the
-current `Place` and journey-state contracts. Backend integration should follow
-through a repository interface so static fixtures remain available for local
-development and previews.
+current `Place` and journey-state contracts. Keep the existing repository
+interface so the website can continue switching between the shared backend and
+local fixtures for development and previews.

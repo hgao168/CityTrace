@@ -42,6 +42,8 @@ The `CityTraceKit` Swift package already maps the contract endpoints:
 - Arrival and progress updates post to `/v1` and reconcile on relaunch.
 - Saved places round-trip through the API.
 - The app runs against local fixtures when the backend is unavailable.
+- Security testing covers the shipped iOS client and its API integration, and
+	critical findings are fixed before the phase closes.
 - `CityTraceKit` tests build and pass in the supported toolchain.
 
 ## Next Phase

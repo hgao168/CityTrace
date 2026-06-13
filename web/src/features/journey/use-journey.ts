@@ -1,27 +1,70 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { places } from "./data";
+import { fixturePlaces } from "./data";
 import {
-  initialJourneyState,
+  loadJourneySnapshot,
+  savePlace,
+  syncTripProgress,
+  unsavePlace,
+} from "./repository";
+import {
+  createInitialJourneyState,
   loadJourneyState,
   saveJourneyState,
 } from "./storage";
 import type { JourneyState, PlaceStatus } from "./types";
 
 export function useJourney() {
-  const [journey, setJourney] = useState<JourneyState>(initialJourneyState);
+  const [places, setPlaces] = useState(fixturePlaces);
+  const [journey, setJourney] = useState<JourneyState>(
+    createInitialJourneyState(fixturePlaces),
+  );
   const [detailPlaceId, setDetailPlaceId] = useState<string | null>(null);
   const [mapScale, setMapScale] = useState(1);
   const [toast, setToast] = useState("");
   const [activeView, setActiveView] = useState("journey");
   const [hasNotification, setHasNotification] = useState(true);
   const [hasRestoredJourney, setHasRestoredJourney] = useState(false);
+  const [isRemote, setIsRemote] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const showToast = useCallback((message: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(message);
+    toastTimer.current = setTimeout(() => setToast(""), 2800);
+  }, []);
+
   useEffect(() => {
-    setJourney(loadJourneyState());
-    setHasRestoredJourney(true);
+    let isMounted = true;
+
+    async function bootstrapJourney() {
+      const snapshot = await loadJourneySnapshot();
+      if (!isMounted) return;
+
+      setPlaces(snapshot.places);
+      setIsRemote(snapshot.remote);
+
+      if (snapshot.remote) {
+        const storedState = loadJourneyState(snapshot.places, snapshot.state);
+        setJourney({
+          ...snapshot.state,
+          selectedPlaceId: storedState.selectedPlaceId,
+        });
+      } else {
+        setJourney(
+          loadJourneyState(snapshot.places, createInitialJourneyState(snapshot.places)),
+        );
+      }
+
+      setHasRestoredJourney(true);
+    }
+
+    void bootstrapJourney();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -43,25 +86,23 @@ export function useJourney() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const showToast = useCallback((message: string) => {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(""), 2800);
-  }, []);
-
   const selectPlace = useCallback((placeId: string, showDetails = false) => {
     setJourney((current) => ({ ...current, selectedPlaceId: placeId }));
     if (showDetails) setDetailPlaceId(placeId);
   }, []);
 
   const toggleSaved = useCallback(() => {
+    const selectedPlaceId = journey.selectedPlaceId;
+    const isSaved = journey.savedPlaceIds.includes(selectedPlaceId);
+    const shouldSave = !isSaved;
+
+    showToast(
+      isSaved
+        ? "Place removed from your saved list"
+        : "Place added to your saved list",
+    );
+
     setJourney((current) => {
-      const isSaved = current.savedPlaceIds.includes(current.selectedPlaceId);
-      showToast(
-        isSaved
-          ? "Place removed from your saved list"
-          : "Place added to your saved list",
-      );
       return {
         ...current,
         savedPlaceIds: isSaved
@@ -71,39 +112,57 @@ export function useJourney() {
           : [...current.savedPlaceIds, current.selectedPlaceId],
       };
     });
-  }, [showToast]);
+
+    if (isRemote && selectedPlaceId) {
+      const request = shouldSave
+        ? savePlace(selectedPlaceId)
+        : unsavePlace(selectedPlaceId);
+      void request.catch(() => {
+        showToast("Could not sync saved places right now.");
+      });
+    }
+  }, [isRemote, journey.savedPlaceIds, journey.selectedPlaceId, showToast]);
 
   const markArrived = useCallback(() => {
+    const selectedIndex = places.findIndex(
+      (place) => place.id === journey.selectedPlaceId,
+    );
+    if (selectedIndex === -1) return;
+
+    const nextStatuses: Record<string, PlaceStatus> = {};
+    places.forEach((place, index) => {
+      nextStatuses[place.id] =
+        index <= selectedIndex
+          ? "done"
+          : index === selectedIndex + 1
+            ? "active"
+            : "upcoming";
+    });
+
+    const arrivedPlace = places[selectedIndex];
+    const nextPlace = places[selectedIndex + 1];
+
+    showToast(
+      nextPlace
+        ? `You arrived at ${arrivedPlace.title}. Next stop: ${nextPlace.title}.`
+        : "Today's city walk is complete. Your journey has been saved.",
+    );
+    setDetailPlaceId(null);
+
     setJourney((current) => {
-      const selectedIndex = places.findIndex(
-        (place) => place.id === current.selectedPlaceId,
-      );
-      const statuses: Record<string, PlaceStatus> = {};
-      places.forEach((place, index) => {
-        statuses[place.id] =
-          index <= selectedIndex
-            ? "done"
-            : index === selectedIndex + 1
-              ? "active"
-              : "upcoming";
-      });
-
-      const arrivedPlace = places[selectedIndex];
-      const nextPlace = places[selectedIndex + 1];
-      showToast(
-        nextPlace
-          ? `You arrived at ${arrivedPlace.title}. Next stop: ${nextPlace.title}.`
-          : "Today's city walk is complete. Your journey has been saved.",
-      );
-      setDetailPlaceId(null);
-
       return {
         ...current,
         selectedPlaceId: nextPlace?.id ?? current.selectedPlaceId,
-        statuses,
+        statuses: nextStatuses,
       };
     });
-  }, [showToast]);
+
+    if (isRemote) {
+      void syncTripProgress(nextStatuses).catch(() => {
+        showToast("Could not sync journey progress right now.");
+      });
+    }
+  }, [isRemote, journey.selectedPlaceId, places, showToast]);
 
   const changeMapScale = useCallback((change: number) => {
     setMapScale((current) =>
@@ -133,7 +192,7 @@ export function useJourney() {
   const completedPlaces = places.filter(
     (place) => journey.statuses[place.id] === "done",
   );
-  const currentPlace = completedPlaces.at(-1) ?? places[0];
+  const currentPlace = completedPlaces.at(-1) ?? places[0] ?? fixturePlaces[0];
 
   return {
     activeView,
@@ -142,11 +201,14 @@ export function useJourney() {
     currentPlace,
     detailPlace,
     doneCount,
+    hasRestoredJourney,
     hasNotification,
+    isRemote,
     journey,
     mapScale,
     markArrived,
     focusMap: () => setMapScale(1.15),
+    places,
     recenterMap: () => setMapScale(1),
     selectPlace,
     selectView,

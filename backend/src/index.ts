@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { cities, places } from "./data";
+import { cities, places, resetJourneyData } from "./data";
+import { OPENAPI_YAML } from "./openapi-yaml";
 import { getJourneyRepository } from "./repository";
 import type { AppBindings } from "./repository";
 import type { EmptyResponse, Trip, TripProgressUpdate } from "./types";
@@ -33,6 +34,46 @@ type JsonTrip = {
   city_id?: string;
   title?: string;
   stops: JsonTripStop[];
+};
+
+type JsonNearbyStop = {
+  place_id: string;
+  order: number;
+  status: string;
+  title: string;
+  latitude: number;
+  longitude: number;
+  distance_m: number;
+};
+
+const EARTH_RADIUS_M = 6371000;
+const ALLOWED_ORIGINS = [
+  "https://citytrace.movenova.ai",
+  "http://localhost:3000",
+  "http://localhost:3100",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:3100",
+] as const;
+
+const degreesToRadians = (degrees: number): number => (degrees * Math.PI) / 180;
+
+const haversineDistanceMeters = (
+  fromLat: number,
+  fromLng: number,
+  toLat: number,
+  toLng: number,
+): number => {
+  const deltaLat = degreesToRadians(toLat - fromLat);
+  const deltaLng = degreesToRadians(toLng - fromLng);
+  const fromLatRadians = degreesToRadians(fromLat);
+  const toLatRadians = degreesToRadians(toLat);
+
+  const a =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(fromLatRadians) * Math.cos(toLatRadians) * Math.sin(deltaLng / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return EARTH_RADIUS_M * c;
 };
 
 const toJsonCity = (city: (typeof cities)[number]): JsonCity => ({
@@ -69,13 +110,19 @@ const parseTripProgressUpdate = (body: unknown): TripProgressUpdate | null => {
   const payload = body as {
     arrived_stop_id?: unknown;
     arrivedStopId?: unknown;
+    active_stop_id?: unknown;
+    activeStopId?: unknown;
     completed_stop_ids?: unknown;
     completedStopIds?: unknown;
     completed_trip?: unknown;
     completedTrip?: unknown;
   };
 
-  const arrivedStopIdRaw = payload.arrived_stop_id ?? payload.arrivedStopId;
+  const arrivedStopIdRaw =
+    payload.arrived_stop_id ??
+    payload.arrivedStopId ??
+    payload.active_stop_id ??
+    payload.activeStopId;
   const completedStopIdsRaw = payload.completed_stop_ids ?? payload.completedStopIds;
   const completedTripRaw = payload.completed_trip ?? payload.completedTrip;
 
@@ -105,7 +152,7 @@ const parseTripProgressUpdate = (body: unknown): TripProgressUpdate | null => {
 app.use(
   "/*",
   cors({
-    origin: ["https://citytrace.movenova.ai", "http://localhost:3000"],
+    origin: [...ALLOWED_ORIGINS],
     allowMethods: ["GET", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     maxAge: 86400,
@@ -117,9 +164,22 @@ app.get("/", (c) =>
     service: "citytrace-backend",
     status: "ok",
     version: "0.1.0",
-    spec: "backend/openapi.yaml",
+    spec: "/openapi.yaml",
   }),
 );
+
+app.get("/openapi.yaml", (c) =>
+  c.text(OPENAPI_YAML, 200, {
+    "content-type": "application/yaml; charset=utf-8",
+    "cache-control": "public, max-age=300",
+  }),
+);
+
+app.post("/testing/reset", (c) => {
+  resetJourneyData();
+  const empty: EmptyResponse = {};
+  return c.json(empty);
+});
 
 app.get("/v1/cities", (c) => c.json(cities.map(toJsonCity)));
 
@@ -139,6 +199,63 @@ app.get("/v1/trips/:tripId", async (c) => {
     return c.json({ error: "trip_not_found" }, 404);
   }
   return c.json(toJsonTrip(trip));
+});
+
+app.get("/v1/trips/:tripId/nearby", async (c) => {
+  const tripId = c.req.param("tripId");
+  const lat = Number(c.req.query("lat"));
+  const lng = Number(c.req.query("lng"));
+  const radiusMeters = Number(c.req.query("radius_m") ?? "1500");
+  const limit = Number(c.req.query("limit") ?? "5");
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return c.json({ error: "invalid_coordinates" }, 400);
+  }
+
+  if (!Number.isFinite(radiusMeters) || radiusMeters <= 0) {
+    return c.json({ error: "invalid_radius_m" }, 400);
+  }
+
+  if (!Number.isFinite(limit) || limit <= 0) {
+    return c.json({ error: "invalid_limit" }, 400);
+  }
+
+  const repository = getJourneyRepository(c.env);
+  const trip = await repository.getTrip(tripId);
+  if (!trip) {
+    return c.json({ error: "trip_not_found" }, 404);
+  }
+
+  const results: JsonNearbyStop[] = [];
+
+  for (const stop of trip.stops) {
+    const place = places.find((candidate) => candidate.id === stop.placeId);
+    if (!place || place.latitude === undefined || place.longitude === undefined) {
+      continue;
+    }
+
+    const distance = haversineDistanceMeters(lat, lng, place.latitude, place.longitude);
+    if (distance <= radiusMeters) {
+      results.push({
+        place_id: stop.placeId,
+        order: stop.order,
+        status: stop.status ?? "upcoming",
+        title: place.title,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        distance_m: Math.round(distance),
+      });
+    }
+  }
+
+  results.sort((left, right) => left.distance_m - right.distance_m);
+
+  return c.json({
+    trip_id: trip.id,
+    origin: { lat, lng },
+    radius_m: radiusMeters,
+    nearby_stops: results.slice(0, Math.floor(limit)),
+  });
 });
 
 app.patch("/v1/trips/:tripId/progress", async (c) => {

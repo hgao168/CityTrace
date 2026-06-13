@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import { places } from "./data";
 import type { JourneyState, Place } from "./types";
 
 type MapPanelProps = {
@@ -9,6 +8,7 @@ type MapPanelProps = {
   onRecenter: () => void;
   onScaleChange: (change: number) => void;
   onSelectPlace: (placeId: string) => void;
+  places: Place[];
 };
 
 export function MapPanel({
@@ -18,6 +18,7 @@ export function MapPanel({
   onRecenter,
   onScaleChange,
   onSelectPlace,
+  places,
 }: MapPanelProps) {
   const scaleStyle = { transform: `scale(${mapScale})` };
 

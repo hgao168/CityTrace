@@ -33,6 +33,8 @@ contract and domain model.
 - Saved places round-trip through the API.
 - The app runs against local fixtures when the backend is unavailable.
 - Instrumented tests cover journey selection, progress, and persistence.
+- Security testing covers the shipped Android client and its API integration,
+  and critical findings are fixed before the phase closes.
 
 ## Next Phase
 

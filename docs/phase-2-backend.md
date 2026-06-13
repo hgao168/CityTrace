@@ -32,7 +32,9 @@ DELETE /v1/users/{userId}/saved-places/{placeId}
 ## Foundation
 
 - TypeScript service.
-- PostgreSQL with PostGIS for geospatial queries.
+- Cloudflare D1 for durable trip-progress and saved-place persistence.
+- Geospatial proximity queries computed in the Worker from stored place
+  coordinates.
 - REST API under `/v1`.
 - OpenAPI as the published client contract.
 - Cloudflare Workers deployment for edge API execution.
@@ -58,6 +60,8 @@ DELETE /v1/users/{userId}/saved-places/{placeId}
 - Progress and saved-place writes are idempotent and durable.
 - Geospatial proximity queries return ordered stops for a trip.
 - The website can read trip and place data from `/v1` without UI changes.
+- Security testing covers the published API and deployment configuration, and
+  critical findings are fixed before the phase closes.
 - Cloudflare deployment serves the API at the CityTrace production domain.
 
 ## Next Phase
