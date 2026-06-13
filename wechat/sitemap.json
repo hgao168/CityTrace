@@ -1,0 +1,9 @@
+{
+  "desc": "CityTrace Mini Program sitemap",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+page {
+  min-height: 100%;
+  background: #f6f3eb;
+  color: #25342f;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+  box-sizing: border-box;
+  font: inherit;
+}
+
+button::after {
+  border: 0;
+}
+
+.eyebrow {
+  margin: 0 0 8rpx;
+  color: #9a6657;
+  font-size: 20rpx;
+  font-weight: 700;
+  letter-spacing: 3rpx;
+}
