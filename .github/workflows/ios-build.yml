@@ -1,0 +1,66 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-build.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Test CityTrace iOS
+    runs-on: macos-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain versions
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Resolve Swift package dependencies
+        working-directory: ios
+        run: swift package resolve
+
+      - name: Build Swift package
+        working-directory: ios
+        run: swift build
+
+      - name: Run Swift tests
+        working-directory: ios
+        run: swift test
+
+      - name: Build package for iOS Simulator
+        working-directory: ios
+        run: |
+          set -euo pipefail
+
+          if xcodebuild \
+            -scheme CityTraceKit-Package \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath .build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            build; then
+            echo "Built with CityTraceKit-Package scheme"
+          else
+            xcodebuild \
+              -scheme CityTraceKit \
+              -destination "generic/platform=iOS Simulator" \
+              -derivedDataPath .build/DerivedData \
+              CODE_SIGNING_ALLOWED=NO \
+              build
+            echo "Built with CityTraceKit scheme"
+          fi
