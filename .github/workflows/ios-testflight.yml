@@ -1,0 +1,123 @@
+name: iOS TestFlight Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-testflight.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate iOS app project exists
+        run: |
+          set -euo pipefail
+          if [ -d "ios" ] && [ -n "$(find ios -maxdepth 1 \( -name '*.xcodeproj' -o -name '*.xcworkspace' \) -print -quit)" ]; then
+            echo "Found iOS project/workspace under ios/."
+          else
+            echo "No .xcodeproj or .xcworkspace found under ios/."
+            echo "Add the CityTrace iOS app project files to ios/ for TestFlight archive builds."
+            exit 1
+          fi
+
+      - name: Decode App Store Connect private key
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}" > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+
+      - name: Decode certificate
+        run: |
+          set -euo pipefail
+          echo "${{ secrets.IOS_CERTIFICATE_P12 }}" | base64 -D > "$RUNNER_TEMP/certificate.p12"
+
+      - name: Decode provisioning profile
+        run: |
+          set -euo pipefail
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISION_PROFILE }}" | base64 -D > ~/Library/MobileDevice/Provisioning\ Profiles/CityNova.mobileprovision
+
+      - name: Create keychain
+        run: |
+          set -euo pipefail
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security import "$RUNNER_TEMP/certificate.p12" -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+
+      - name: Determine project and scheme
+        run: |
+          set -euo pipefail
+
+          scheme="CityTrace"
+
+          if [ -d "ios/CityTrace.xcworkspace" ]; then
+            echo "BUILD_TARGET=-workspace ios/CityTrace.xcworkspace" >> "$GITHUB_ENV"
+          elif [ -d "ios/CityTrace.xcodeproj" ]; then
+            echo "BUILD_TARGET=-project ios/CityTrace.xcodeproj" >> "$GITHUB_ENV"
+          else
+            workspace_path="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
+            project_path="$(find ios -maxdepth 1 -name '*.xcodeproj' -print -quit)"
+
+            if [ -n "$workspace_path" ]; then
+              echo "BUILD_TARGET=-workspace $workspace_path" >> "$GITHUB_ENV"
+            elif [ -n "$project_path" ]; then
+              echo "BUILD_TARGET=-project $project_path" >> "$GITHUB_ENV"
+            else
+              echo "No .xcodeproj or .xcworkspace found under ios/."
+              exit 1
+            fi
+          fi
+
+          echo "IOS_SCHEME=$scheme" >> "$GITHUB_ENV"
+
+      - name: Build archive
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            $BUILD_TARGET \
+            -scheme "$IOS_SCHEME" \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+
+      - name: Export IPA
+        run: |
+          set -euo pipefail
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist ios/ExportOptions.plist
+
+      - name: Upload to TestFlight
+        run: |
+          set -euo pipefail
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$RUNNER_TEMP/export"/*.ipa \
+            --apiKey "${{ secrets.APP_STORE_CONNECT_KEY_ID }}" \
+            --apiIssuer "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}"
+
+      - name: Cleanup keychain and secrets
+        if: always()
+        run: |
+          security delete-keychain build.keychain || true
+          rm -f "$RUNNER_TEMP/certificate.p12"
+          rm -f ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
