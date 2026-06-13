@@ -34,31 +34,71 @@ jobs:
             exit 1
           fi
 
+      - name: Validate required secrets
+        env:
+          IOS_CERTIFICATE_P12: ${{ secrets.IOS_CERTIFICATE_P12 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_PROVISION_PROFILE: ${{ secrets.IOS_PROVISION_PROFILE }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -z "$IOS_CERTIFICATE_P12" ]        && missing+=("IOS_CERTIFICATE_P12")
+          [ -z "$IOS_CERTIFICATE_PASSWORD" ]   && missing+=("IOS_CERTIFICATE_PASSWORD")
+          [ -z "$IOS_PROVISION_PROFILE" ]      && missing+=("IOS_PROVISION_PROFILE")
+          [ -z "$KEYCHAIN_PASSWORD" ]          && missing+=("KEYCHAIN_PASSWORD")
+          [ -z "$APP_STORE_CONNECT_KEY_ID" ]   && missing+=("APP_STORE_CONNECT_KEY_ID")
+          [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] && missing+=("APP_STORE_CONNECT_ISSUER_ID")
+          [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ] && missing+=("APP_STORE_CONNECT_PRIVATE_KEY")
+          [ -z "$APPLE_TEAM_ID" ]              && missing+=("APPLE_TEAM_ID")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "ERROR: The following GitHub Actions secrets are not set:"
+            for s in "${missing[@]}"; do echo "  - $s"; done
+            echo ""
+            echo "Add them at: https://github.com/hgao168/CityTrace/settings/secrets/actions"
+            exit 1
+          fi
+          echo "All required secrets are present."
+
       - name: Decode App Store Connect private key
+        env:
+          KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
         run: |
           set -euo pipefail
           mkdir -p ~/.appstoreconnect/private_keys
-          printf '%s' "${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}" > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+          printf '%s' "$KEY_CONTENT" > ~/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8
 
       - name: Decode certificate
+        env:
+          CERT_B64: ${{ secrets.IOS_CERTIFICATE_P12 }}
         run: |
           set -euo pipefail
-          echo "${{ secrets.IOS_CERTIFICATE_P12 }}" | base64 -D > "$RUNNER_TEMP/certificate.p12"
+          echo "$CERT_B64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
 
       - name: Decode provisioning profile
+        env:
+          PROFILE_B64: ${{ secrets.IOS_PROVISION_PROFILE }}
         run: |
           set -euo pipefail
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISION_PROFILE }}" | base64 -D > ~/Library/MobileDevice/Provisioning\ Profiles/CityNova.mobileprovision
+          echo "$PROFILE_B64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/CityNova.mobileprovision
 
       - name: Create keychain
+        env:
+          KEYCHAIN_PW: ${{ secrets.KEYCHAIN_PASSWORD }}
+          CERT_PW: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
         run: |
           set -euo pipefail
-          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security create-keychain -p "$KEYCHAIN_PW" build.keychain
           security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security import "$RUNNER_TEMP/certificate.p12" -k build.keychain -P "${{ secrets.IOS_CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PW" build.keychain
+          security import "$RUNNER_TEMP/certificate.p12" -k build.keychain -P "$CERT_PW" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PW" build.keychain
 
       - name: Determine project and scheme
         run: |
