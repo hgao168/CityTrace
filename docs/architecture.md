@@ -26,9 +26,12 @@ React components in later changes.
 
 ## Deployment
 
-Deploy the `web` directory as the project root. The production hostname is:
+Deploy the `web` directory through Cloudflare Pages:
 
-`https://citytrace.movenova.ai`
+- Build command: `npm run build`
+- Build output directory: `out`
+- Production branch: `main`
+- Production hostname: `https://citytrace.movenova.ai`
 
-DNS and hosting-provider domain assignment are operational configuration and
-are intentionally not stored as credentials in this repository.
+`web/wrangler.jsonc` records the Pages output directory so local and hosted
+deployments use the same artifact contract.
