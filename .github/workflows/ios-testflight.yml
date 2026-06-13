@@ -26,7 +26,7 @@ jobs:
       - name: Validate iOS app project exists
         run: |
           set -euo pipefail
-          if [ -d "ios" ] && [ -n "$(find ios -maxdepth 1 \( -name '*.xcodeproj' -o -name '*.xcworkspace' \) -print -quit)" ]; then
+          if [ -d "ios" ] && [ -n "$(find ios -type d \( -name '*.xcodeproj' -o -name '*.xcworkspace' \) -print -quit)" ]; then
             echo "Found iOS project/workspace under ios/."
           else
             echo "No .xcodeproj or .xcworkspace found under ios/."
@@ -71,8 +71,8 @@ jobs:
           elif [ -d "ios/CityTrace.xcodeproj" ]; then
             echo "BUILD_TARGET=-project ios/CityTrace.xcodeproj" >> "$GITHUB_ENV"
           else
-            workspace_path="$(find ios -maxdepth 1 -name '*.xcworkspace' -print -quit)"
-            project_path="$(find ios -maxdepth 1 -name '*.xcodeproj' -print -quit)"
+            workspace_path="$(find ios -type d -name '*.xcworkspace' -print -quit)"
+            project_path="$(find ios -type d -name '*.xcodeproj' -print -quit)"
 
             if [ -n "$workspace_path" ]; then
               echo "BUILD_TARGET=-workspace $workspace_path" >> "$GITHUB_ENV"
