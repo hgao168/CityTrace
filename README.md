@@ -29,8 +29,14 @@ Open `http://localhost:3000`.
 
 Production website: [citytrace.movenova.ai](https://citytrace.movenova.ai)
 
-For deployment, configure the hosting project root as `web` and attach the
-custom domain `citytrace.movenova.ai`.
+Cloudflare Pages deployment settings:
+
+- Root directory: `web`
+- Build command: `npm run build`
+- Build output directory: `out`
+- Production branch: `main`
+
+The custom domain is `citytrace.movenova.ai`.
 
 ## Architecture
 
