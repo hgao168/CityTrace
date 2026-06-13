@@ -22,10 +22,20 @@ The `CityTraceKit` Swift package already maps the contract endpoints:
 - `fetchCities()` -> `GET /v1/cities`
 - `fetchPlaces(cityId:)` -> `GET /v1/cities/{cityId}/places`
 - `fetchTrip(tripId:)` -> `GET /v1/trips/{tripId}`
+- `fetchNearbyStops(tripId:latitude:longitude:radiusMeters:limit:)` -> `GET /v1/trips/{tripId}/nearby`
 - `updateTripProgress(tripId:progress:)` -> `PATCH /v1/trips/{tripId}/progress`
 - `fetchSavedPlaces(userId:)` -> `GET /v1/users/{userId}/saved-places`
 - `savePlace(userId:placeId:)` -> `PUT .../saved-places/{placeId}`
 - `removeSavedPlace(userId:placeId:)` -> `DELETE .../saved-places/{placeId}`
+
+The package now also includes a journey orchestration layer that mirrors web
+behavior while using the real phase-2 backend:
+
+- Bootstrap from `/v1/cities/{cityId}/places`, `/v1/trips/{tripId}`, and
+	`/v1/users/{userId}/saved-places`.
+- Merge remote state with local persisted selection for continuity.
+- Fallback to local fixture places when backend calls fail.
+- Sync save/unsave and progress updates back to `/v1` endpoints.
 
 ## Scope
 

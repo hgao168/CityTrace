@@ -1,5 +1,11 @@
 import Foundation
 
+public enum PlaceStatus: String, Codable, Equatable, Sendable {
+    case done
+    case active
+    case upcoming
+}
+
 public struct City: Codable, Equatable, Sendable {
     public let id: String
     public let name: String
@@ -77,4 +83,56 @@ public struct TripProgressUpdate: Codable, Equatable, Sendable {
 
 public struct EmptyResponse: Codable, Equatable, Sendable {
     public init() {}
+}
+
+public struct NearbyTripStopsResponse: Codable, Equatable, Sendable {
+    public struct Origin: Codable, Equatable, Sendable {
+        public let lat: Double
+        public let lng: Double
+
+        public init(lat: Double, lng: Double) {
+            self.lat = lat
+            self.lng = lng
+        }
+    }
+
+    public struct NearbyStop: Codable, Equatable, Sendable {
+        public let placeId: String
+        public let order: Int
+        public let status: String
+        public let title: String
+        public let latitude: Double
+        public let longitude: Double
+        public let distanceM: Int
+
+        public init(
+            placeId: String,
+            order: Int,
+            status: String,
+            title: String,
+            latitude: Double,
+            longitude: Double,
+            distanceM: Int
+        ) {
+            self.placeId = placeId
+            self.order = order
+            self.status = status
+            self.title = title
+            self.latitude = latitude
+            self.longitude = longitude
+            self.distanceM = distanceM
+        }
+    }
+
+    public let tripId: String
+    public let origin: Origin
+    public let radiusM: Double
+    public let nearbyStops: [NearbyStop]
+
+    public init(tripId: String, origin: Origin, radiusM: Double, nearbyStops: [NearbyStop]) {
+        self.tripId = tripId
+        self.origin = origin
+        self.radiusM = radiusM
+        self.nearbyStops = nearbyStops
+    }
 }

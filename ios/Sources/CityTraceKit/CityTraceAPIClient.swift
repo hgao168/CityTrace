@@ -50,6 +50,18 @@ public struct CityTraceAPIClient: Sendable {
         try await send(path: "/v1/trips/\(tripId)", method: "GET", decode: Trip.self)
     }
 
+    public func fetchNearbyStops(
+        tripId: String,
+        latitude: Double,
+        longitude: Double,
+        radiusMeters: Double = 1500,
+        limit: Int = 5
+    ) async throws -> NearbyTripStopsResponse {
+        let queryPath =
+            "/v1/trips/\(tripId)/nearby?lat=\(latitude)&lng=\(longitude)&radius_m=\(radiusMeters)&limit=\(limit)"
+        return try await send(path: queryPath, method: "GET", decode: NearbyTripStopsResponse.self)
+    }
+
     public func updateTripProgress(tripId: String, progress: TripProgressUpdate) async throws -> EmptyResponse {
         try await send(path: "/v1/trips/\(tripId)/progress", method: "PATCH", body: progress, decode: EmptyResponse.self)
     }
