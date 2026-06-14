@@ -64,6 +64,27 @@ jobs:
           fi
           echo "All required secrets are present."
 
+      - name: Validate secret payload formats
+        env:
+          CERT_B64: ${{ secrets.IOS_CERTIFICATE_P12 }}
+          PROFILE_B64: ${{ secrets.IOS_PROVISION_PROFILE }}
+        run: |
+          set -euo pipefail
+
+          if ! printf '%s' "$CERT_B64" | tr -d '\r\n\t ' | base64 --decode >/dev/null 2>&1; then
+            echo "ERROR: IOS_CERTIFICATE_P12 is set but is not valid base64 content."
+            echo "Regenerate with: [Convert]::ToBase64String([System.IO.File]::ReadAllBytes('citynova-distribution.p12'))"
+            exit 1
+          fi
+
+          if ! printf '%s' "$PROFILE_B64" | tr -d '\r\n\t ' | base64 --decode >/dev/null 2>&1; then
+            echo "ERROR: IOS_PROVISION_PROFILE is set but is not valid base64 content."
+            echo "Regenerate with: [Convert]::ToBase64String([System.IO.File]::ReadAllBytes('CityNova.mobileprovision'))"
+            exit 1
+          fi
+
+          echo "Secret payload formats look valid."
+
       - name: Decode App Store Connect private key
         env:
           KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
@@ -78,7 +99,7 @@ jobs:
           CERT_B64: ${{ secrets.IOS_CERTIFICATE_P12 }}
         run: |
           set -euo pipefail
-          echo "$CERT_B64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          printf '%s' "$CERT_B64" | tr -d '\r\n\t ' | base64 --decode > "$RUNNER_TEMP/certificate.p12"
 
       - name: Decode provisioning profile
         env:
@@ -86,7 +107,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "$PROFILE_B64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/CityNova.mobileprovision
+          printf '%s' "$PROFILE_B64" | tr -d '\r\n\t ' | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/CityNova.mobileprovision
 
       - name: Create keychain
         env:
