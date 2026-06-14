@@ -41,7 +41,7 @@ jobs:
 
       - name: Run Swift tests
         working-directory: ios
-        run: swift test
+        run: swift test --enable-xctest
 
       - name: Build package for iOS Simulator
         working-directory: ios

@@ -7,14 +7,14 @@ import XCTest
 
 final class JourneyServiceTests: XCTestCase {
     func testLoadJourneySnapshotUsesRemoteStateAndStoredSelection() async {
-        let transport = QueueTransport(items: [
-            .ok("""
+        let transport = PathTransport([
+            "/v1/cities/amsterdam/places": """
             [
               {"id":"centraal","city_id":"amsterdam","title":"Amsterdam Centraal","subtitle":"Remote subtitle"},
               {"id":"dam","city_id":"amsterdam","title":"Dam Square"}
             ]
-            """),
-            .ok("""
+            """,
+            "/v1/trips/amsterdam-highlights": """
             {
               "id":"amsterdam-highlights",
               "stops":[
@@ -22,12 +22,12 @@ final class JourneyServiceTests: XCTestCase {
                 {"place_id":"dam","order":2,"status":"active"}
               ]
             }
-            """),
-                        .ok("""
-                        [
-                            {"id":"dam","city_id":"amsterdam","title":"Dam Square"}
-                        ]
-                        """)
+            """,
+            "/v1/users/web-demo/saved-places": """
+            [
+                {"id":"dam","city_id":"amsterdam","title":"Dam Square"}
+            ]
+            """
         ])
 
         let api = CityTraceAPIClient(baseURL: URL(string: "https://api.citytrace.test")!, transport: transport)
@@ -79,6 +79,26 @@ final class JourneyServiceTests: XCTestCase {
         XCTAssertEqual(body?["arrived_stop_id"] as? String, "dam")
         XCTAssertEqual(body?["completed_trip"] as? Bool, false)
         XCTAssertEqual(body?["completed_stop_ids"] as? [String], ["centraal"])
+    }
+}
+
+private actor PathTransport: HTTPTransport {
+    private let routes: [String: String]
+
+    init(_ routes: [String: String]) {
+        self.routes = routes
+    }
+
+    func data(for request: URLRequest) async throws -> (Data, URLResponse) {
+        let path = request.url?.path ?? ""
+        let body = routes.first(where: { path.hasSuffix($0.key) })?.value ?? "{}"
+        let response = HTTPURLResponse(
+            url: request.url ?? URL(string: "https://api.citytrace.test")!,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        return (Data(body.utf8), response)
     }
 }
 
