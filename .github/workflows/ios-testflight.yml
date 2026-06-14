@@ -36,10 +36,6 @@ jobs:
 
       - name: Validate required secrets
         env:
-          IOS_CERTIFICATE_P12: ${{ secrets.IOS_CERTIFICATE_P12 }}
-          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          IOS_PROVISION_PROFILE: ${{ secrets.IOS_PROVISION_PROFILE }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
@@ -47,45 +43,18 @@ jobs:
         run: |
           set -euo pipefail
           missing=()
-          [ -z "$IOS_CERTIFICATE_P12" ]        && missing+=("IOS_CERTIFICATE_P12")
-          [ -z "$IOS_CERTIFICATE_PASSWORD" ]   && missing+=("IOS_CERTIFICATE_PASSWORD")
-          [ -z "$IOS_PROVISION_PROFILE" ]      && missing+=("IOS_PROVISION_PROFILE")
-          [ -z "$KEYCHAIN_PASSWORD" ]          && missing+=("KEYCHAIN_PASSWORD")
-          [ -z "$APP_STORE_CONNECT_KEY_ID" ]   && missing+=("APP_STORE_CONNECT_KEY_ID")
-          [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] && missing+=("APP_STORE_CONNECT_ISSUER_ID")
+          [ -z "$APP_STORE_CONNECT_KEY_ID" ]      && missing+=("APP_STORE_CONNECT_KEY_ID")
+          [ -z "$APP_STORE_CONNECT_ISSUER_ID" ]   && missing+=("APP_STORE_CONNECT_ISSUER_ID")
           [ -z "$APP_STORE_CONNECT_PRIVATE_KEY" ] && missing+=("APP_STORE_CONNECT_PRIVATE_KEY")
-          [ -z "$APPLE_TEAM_ID" ]              && missing+=("APPLE_TEAM_ID")
+          [ -z "$APPLE_TEAM_ID" ]                 && missing+=("APPLE_TEAM_ID")
           if [ ${#missing[@]} -gt 0 ]; then
             echo "ERROR: The following GitHub Actions secrets are not set:"
             for s in "${missing[@]}"; do echo "  - $s"; done
-            echo ""
-            echo "Add them at: https://github.com/hgao168/CityTrace/settings/secrets/actions"
             exit 1
           fi
           echo "All required secrets are present."
 
-      - name: Validate secret payload formats
-        env:
-          CERT_B64: ${{ secrets.IOS_CERTIFICATE_P12 }}
-          PROFILE_B64: ${{ secrets.IOS_PROVISION_PROFILE }}
-        run: |
-          set -euo pipefail
-
-          if ! printf '%s' "$CERT_B64" | tr -d '\r\n\t ' | base64 --decode >/dev/null 2>&1; then
-            echo "ERROR: IOS_CERTIFICATE_P12 is set but is not valid base64 content."
-            echo "Regenerate with: [Convert]::ToBase64String([System.IO.File]::ReadAllBytes('citynova-distribution.p12'))"
-            exit 1
-          fi
-
-          if ! printf '%s' "$PROFILE_B64" | tr -d '\r\n\t ' | base64 --decode >/dev/null 2>&1; then
-            echo "ERROR: IOS_PROVISION_PROFILE is set but is not valid base64 content."
-            echo "Regenerate with: [Convert]::ToBase64String([System.IO.File]::ReadAllBytes('CityNova.mobileprovision'))"
-            exit 1
-          fi
-
-          echo "Secret payload formats look valid."
-
-      - name: Decode App Store Connect private key
+      - name: Install App Store Connect key
         env:
           KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
@@ -93,33 +62,6 @@ jobs:
           set -euo pipefail
           mkdir -p ~/.appstoreconnect/private_keys
           printf '%s' "$KEY_CONTENT" > ~/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8
-
-      - name: Decode certificate
-        env:
-          CERT_B64: ${{ secrets.IOS_CERTIFICATE_P12 }}
-        run: |
-          set -euo pipefail
-          printf '%s' "$CERT_B64" | tr -d '\r\n\t ' | base64 --decode > "$RUNNER_TEMP/certificate.p12"
-
-      - name: Decode provisioning profile
-        env:
-          PROFILE_B64: ${{ secrets.IOS_PROVISION_PROFILE }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          printf '%s' "$PROFILE_B64" | tr -d '\r\n\t ' | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/CityNova.mobileprovision
-
-      - name: Create keychain
-        env:
-          KEYCHAIN_PW: ${{ secrets.KEYCHAIN_PASSWORD }}
-          CERT_PW: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-        run: |
-          set -euo pipefail
-          security create-keychain -p "$KEYCHAIN_PW" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "$KEYCHAIN_PW" build.keychain
-          security import "$RUNNER_TEMP/certificate.p12" -k build.keychain -P "$CERT_PW" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PW" build.keychain
 
       - name: Determine project and scheme
         run: |
@@ -148,6 +90,10 @@ jobs:
           echo "IOS_SCHEME=$scheme" >> "$GITHUB_ENV"
 
       - name: Build archive
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -euo pipefail
           xcodebuild archive \
@@ -156,29 +102,43 @@ jobs:
             -configuration Release \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -destination "generic/platform=iOS" \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="$TEAM_ID"
 
       - name: Export IPA
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -euo pipefail
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -exportPath "$RUNNER_TEMP/export" \
-            -exportOptionsPlist ios/ExportOptions.plist
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8" \
+            -authenticationKeyID "$KEY_ID" \
+            -authenticationKeyIssuerID "$ISSUER_ID"
 
       - name: Upload to TestFlight
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -euo pipefail
           xcrun altool --upload-app \
             --type ios \
             --file "$RUNNER_TEMP/export"/*.ipa \
-            --apiKey "${{ secrets.APP_STORE_CONNECT_KEY_ID }}" \
-            --apiIssuer "${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}"
+            --apiKey "$KEY_ID" \
+            --apiIssuer "$ISSUER_ID"
 
-      - name: Cleanup keychain and secrets
+      - name: Cleanup secrets
         if: always()
+        env:
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
         run: |
-          security delete-keychain build.keychain || true
-          rm -f "$RUNNER_TEMP/certificate.p12"
-          rm -f ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APP_STORE_CONNECT_KEY_ID }}.p8
+          rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8"
