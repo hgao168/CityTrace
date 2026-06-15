@@ -109,8 +109,9 @@ jobs:
             CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM="$TEAM_ID"
 
-      - name: Export IPA
+      - name: Export and upload to TestFlight
         env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
@@ -123,18 +124,6 @@ jobs:
             -authenticationKeyPath "$HOME/.appstoreconnect/private_keys/AuthKey_${KEY_ID}.p8" \
             -authenticationKeyID "$KEY_ID" \
             -authenticationKeyIssuerID "$ISSUER_ID"
-
-      - name: Upload to TestFlight
-        env:
-          KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        run: |
-          set -euo pipefail
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$RUNNER_TEMP/export"/*.ipa \
-            --apiKey "$KEY_ID" \
-            --apiIssuer "$ISSUER_ID"
 
       - name: Cleanup secrets
         if: always()
