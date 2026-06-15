@@ -1,15 +1,16 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var viewModel = JourneyViewModel()
+
     var body: some View {
-        VStack(spacing: 12) {
-            Text("CityTrace")
-                .font(.title)
-                .fontWeight(.semibold)
-            Text("iOS app shell for TestFlight pipeline")
-                .foregroundStyle(.secondary)
+        TabView {
+            JourneyView(viewModel: viewModel)
+                .tabItem { Label("Journey", systemImage: "map.fill") }
+            SavedView(viewModel: viewModel)
+                .tabItem { Label("Saved", systemImage: "heart.fill") }
         }
-        .padding()
+        .task { await viewModel.loadJourney() }
     }
 }
 
